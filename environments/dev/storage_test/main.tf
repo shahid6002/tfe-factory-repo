@@ -24,7 +24,7 @@ variable "create_test_resources" {
 }
 
 module "storage_test" {
-  source = "git::https://github.com/my-org/terraform-azure-storage.git?ref=feature/az-storage-module"
+  source = "git::https://github.com/shahid6002/TFE.git?ref=feature/az-storage-module"
 
   resource_group_name  = "rg-storage-dev"
   location             = "eastus"
