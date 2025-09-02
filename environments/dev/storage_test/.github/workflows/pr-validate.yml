@@ -1,0 +1,29 @@
+name: PR Validate (Factory)
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pr-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: terraform init
+        run: terraform init -input=false
+
+      - name: terraform plan (save plan)
+        run: terraform plan -input=false -out=tfplan
+
+      - name: terraform show (json)
+        run: terraform show -json tfplan > plan.json
+
+      - name: Wiz IaC scan (example)
+        # Use your preferred wiz action or CLI wrapper; this shows concept:
+        run: |
+          curl -sL https://get.wiz.io/wiz-cli.sh | bash
+          ./wiz iac scan --json plan.json --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }}
