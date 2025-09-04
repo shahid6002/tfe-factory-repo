@@ -1,3 +1,4 @@
+
 name: PR Validate (Factory)
 
 on:
@@ -13,43 +14,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repo code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup Terraform CLI
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.7.5   # adjust to match your repo version
+          terraform_version: 1.7.5  # adjust if needed
 
-      # Terraform Init (with TF Cloud token)
+      # --- Simple fix: write TFC credentials file ---
+      - name: Configure Terraform Cloud credentials
+        run: |
+          mkdir -p ~/.terraform.d
+          cat > ~/.terraform.d/credentials.tfrc.json <<'EOF'
+          {
+            "credentials": {
+              "app.terraform.io": {
+                "token": "${{ secrets.TF_API_TOKEN }}"
+              }
+            }
+          }
+          EOF
+
       - name: Terraform Init
-        working-directory: environments/dev/storage_test   # 👈 adjust path if needed
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+        working-directory: environments/dev/storage_test   # <-- update if your test path differs
         run: terraform init -input=false
 
-      # Terraform Plan
       - name: Terraform Plan (save plan)
         working-directory: environments/dev/storage_test
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
         run: terraform plan -input=false -out=tfplan
 
-      # Convert Plan to JSON
       - name: Terraform Show (to JSON)
         working-directory: environments/dev/storage_test
         run: terraform show -json tfplan > plan.json
 
-      # Install Wiz CLI
       - name: Install Wiz CLI
         run: |
           curl -sL https://get.wiz.io/wiz-cli.sh | bash
           mv wiz /usr/local/bin/wiz
           wiz --version
 
-      # Wiz IaC Scan
       - name: Wiz IaC Scan
         working-directory: environments/dev/storage_test
         env:
