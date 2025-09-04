@@ -1,4 +1,3 @@
-
 name: PR Validate (Factory)
 
 on:
@@ -22,11 +21,11 @@ jobs:
         with:
           terraform_version: 1.7.5  # adjust if needed
 
-      # --- Simple fix: write TFC credentials file ---
+      # --- Fix: Write Terraform Cloud credentials file ---
       - name: Configure Terraform Cloud credentials
         run: |
           mkdir -p ~/.terraform.d
-          cat > ~/.terraform.d/credentials.tfrc.json <<'EOF'
+          cat > ~/.terraform.d/credentials.tfrc.json <<EOF
           {
             "credentials": {
               "app.terraform.io": {
@@ -37,7 +36,7 @@ jobs:
           EOF
 
       - name: Terraform Init
-        working-directory: environments/dev/storage_test   # <-- update if your test path differs
+        working-directory: environments/dev/storage_test   # <-- adjust path if needed
         run: terraform init -input=false
 
       - name: Terraform Plan (save plan)
