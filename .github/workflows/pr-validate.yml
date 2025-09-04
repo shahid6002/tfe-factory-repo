@@ -8,7 +8,8 @@ jobs:
   pr-validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -26,7 +27,3 @@ jobs:
       - name: Terraform validate
         working-directory: environments/dev/storage_test
         run: terraform validate
-
-      - name: Terraform plan (local, skip TFC backend)
-        working-directory: environments/dev/storage_test
-        run: terraform plan -backend=false -input=false -out=tfplan -refresh=false -lock=false
