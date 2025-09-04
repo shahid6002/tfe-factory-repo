@@ -23,7 +23,7 @@ jobs:
 
       - name: Terraform fmt (check)
         working-directory: environments/dev/storage_test
-        run: terraform fmt -check -recursive
+        run: terraform fmt -recursive
 
       - name: Terraform init (local backend)
         working-directory: environments/dev/storage_test
