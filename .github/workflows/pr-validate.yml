@@ -1,0 +1,29 @@
+name: PR Validate (Factory) - local only
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pr-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform fmt (check)
+        working-directory: environments/dev/storage_test
+        run: terraform fmt -recursive
+
+      - name: Terraform init (local, skip TFC backend)
+        working-directory: environments/dev/storage_test
+        run: terraform init -backend=false -input=false -reconfigure
+
+      - name: Terraform validate
+        working-directory: environments/dev/storage_test
+        run: terraform validate
