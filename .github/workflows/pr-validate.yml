@@ -13,25 +13,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repo code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Setup Terraform CLI
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.7.5   # adjust to match your repo version
 
-      # Terraform Init
+      # Terraform Init (with TF Cloud token)
       - name: Terraform Init
-        working-directory: environments/dev/storage_test   # 👈 update if different
+        working-directory: environments/dev/storage_test   # 👈 adjust path if needed
+        env:
+          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
         run: terraform init -input=false
 
       # Terraform Plan
       - name: Terraform Plan (save plan)
         working-directory: environments/dev/storage_test
+        env:
+          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
         run: terraform plan -input=false -out=tfplan
 
-      # Terraform Show → JSON
+      # Convert Plan to JSON
       - name: Terraform Show (to JSON)
         working-directory: environments/dev/storage_test
         run: terraform show -json tfplan > plan.json
@@ -40,4 +46,14 @@ jobs:
       - name: Install Wiz CLI
         run: |
           curl -sL https://get.wiz.io/wiz-cli.sh | bash
-          mv wiz /usr/local/bi
+          mv wiz /usr/local/bin/wiz
+          wiz --version
+
+      # Wiz IaC Scan
+      - name: Wiz IaC Scan
+        working-directory: environments/dev/storage_test
+        env:
+          WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
+          WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
+        run: |
+          wiz iac scan --json plan.json --exit-code-on-fail
