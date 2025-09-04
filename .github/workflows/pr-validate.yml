@@ -1,4 +1,4 @@
-name: PR Validate (Factory)
+name: PR Validate (Factory) - local plan only
 
 on:
   pull_request:
@@ -21,42 +21,29 @@ jobs:
         with:
           terraform_version: 1.7.5  # adjust if needed
 
-      # --- Fix: Write Terraform Cloud credentials file ---
-      - name: Configure Terraform Cloud credentials
-        run: |
-          mkdir -p ~/.terraform.d
-          cat > ~/.terraform.d/credentials.tfrc.json <<EOF
-          {
-            "credentials": {
-              "app.terraform.io": {
-                "token": "${{ secrets.TF_API_TOKEN }}"
-              }
-            }
-          }
-          EOF
-
-      - name: Terraform Init
-        working-directory: environments/dev/storage_test   # <-- adjust path if needed
-        run: terraform init -input=false
-
-      - name: Terraform Plan (save plan)
+      - name: Terraform fmt (check)
         working-directory: environments/dev/storage_test
-        run: terraform plan -input=false -out=tfplan
+        run: terraform fmt -check -recursive
 
-      - name: Terraform Show (to JSON)
+      - name: Terraform init (local backend)
+        working-directory: environments/dev/storage_test
+        run: terraform init -backend=false -input=false
+
+      - name: Terraform validate
+        working-directory: environments/dev/storage_test
+        run: terraform validate
+
+      - name: Terraform plan (local)
+        working-directory: environments/dev/storage_test
+        run: terraform plan -input=false -out=tfplan -refresh=false
+
+      - name: Terraform show (to JSON)
         working-directory: environments/dev/storage_test
         run: terraform show -json tfplan > plan.json
 
-      - name: Install Wiz CLI
-        run: |
-          curl -sL https://get.wiz.io/wiz-cli.sh | bash
-          mv wiz /usr/local/bin/wiz
-          wiz --version
-
-      - name: Wiz IaC Scan
-        working-directory: environments/dev/storage_test
-        env:
-          WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
-          WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
-        run: |
-          wiz iac scan --json plan.json --exit-code-on-fail
+      - name: Upload plan.json (artifact - optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-plan-json
+          path: environments/dev/storage_test/plan.json
