@@ -27,14 +27,14 @@ jobs:
       - name: Terraform Init
         working-directory: environments/dev/storage_test   # 👈 adjust path if needed
         env:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
         run: terraform init -input=false
 
       # Terraform Plan
       - name: Terraform Plan (save plan)
         working-directory: environments/dev/storage_test
         env:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
         run: terraform plan -input=false -out=tfplan
 
       # Convert Plan to JSON
