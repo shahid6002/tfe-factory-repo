@@ -19,10 +19,14 @@ jobs:
         working-directory: environments/dev/storage_test
         run: terraform fmt -check -recursive
 
-      - name: Terraform init (local, no backend)
+      - name: Terraform init (local, skip TFC backend)
         working-directory: environments/dev/storage_test
-        run: terraform init -backend=false -input=false
+        run: terraform init -backend=false -input=false -reconfigure
 
       - name: Terraform validate
         working-directory: environments/dev/storage_test
         run: terraform validate
+
+      - name: Terraform plan (local, skip TFC backend)
+        working-directory: environments/dev/storage_test
+        run: terraform plan -backend=false -input=false -out=tfplan -refresh=false -lock=false
