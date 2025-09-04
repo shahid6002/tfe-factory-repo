@@ -4,26 +4,40 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   pr-validate:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.5   # adjust to match your repo version
 
-      - name: terraform init
+      # Terraform Init
+      - name: Terraform Init
+        working-directory: environments/dev/storage_test   # 👈 update if different
         run: terraform init -input=false
 
-      - name: terraform plan (save plan)
+      # Terraform Plan
+      - name: Terraform Plan (save plan)
+        working-directory: environments/dev/storage_test
         run: terraform plan -input=false -out=tfplan
 
-      - name: terraform show (json)
+      # Terraform Show → JSON
+      - name: Terraform Show (to JSON)
+        working-directory: environments/dev/storage_test
         run: terraform show -json tfplan > plan.json
 
-      - name: Wiz IaC scan (example)
-        # Use your preferred wiz action or CLI wrapper; this shows concept:
+      # Install Wiz CLI
+      - name: Install Wiz CLI
         run: |
           curl -sL https://get.wiz.io/wiz-cli.sh | bash
-          ./wiz iac scan --json plan.json --client-id ${{ secrets.WIZ_CLIENT_ID }} --client-secret ${{ secrets.WIZ_CLIENT_SECRET }}
+          mv wiz /usr/local/bi
