@@ -1,49 +1,30 @@
-name: PR Validate (Factory) - local plan only
+name: PR Validate (Factory)
 
 on:
   pull_request:
     branches: [ main ]
-
-permissions:
-  contents: read
-  pull-requests: write
 
 jobs:
   pr-validate:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.7.5  # adjust if needed
 
-      - name: Terraform fmt (check)
-        working-directory: environments/dev/storage_test
-        run: terraform fmt -recursive
+      - name: Terraform Init
+        run: terraform init -input=false
 
-      - name: Terraform init (local backend)
-        working-directory: environments/dev/storage_test
-        run: terraform init -backend=false -input=false
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
 
-      - name: Terraform validate
-        working-directory: environments/dev/storage_test
+      - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform plan (local)
-        working-directory: environments/dev/storage_test
+      - name: Terraform Init (again for safety with Cloud)
+        run: terraform init -input=false -reconfigure
+
+      - name: Terraform Plan
         run: terraform plan -input=false -out=tfplan -refresh=false
-
-      - name: Terraform show (to JSON)
-        working-directory: environments/dev/storage_test
-        run: terraform show -json tfplan > plan.json
-
-      - name: Upload plan.json (artifact - optional)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tf-plan-json
-          path: environments/dev/storage_test/plan.json
